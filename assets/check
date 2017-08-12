@@ -1,0 +1,24 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+import sys
+import fileinput
+import json
+
+from parent_directory import ParentDirectory
+
+def read_input():
+    payload = json.load(sys.stdin)
+    version = None
+    if 'source' not in payload or 'url' not in payload['source']:
+        sys.stdout.write('must specify a source URL')
+        exit(1)
+    if 'version' in payload and 'version' in payload['version']:
+        version = payload['version']['version']
+    return (payload['source'], version)
+
+if __name__ == '__main__':
+    (source, version) = read_input()
+    d = ParentDirectory(source)
+    d.fetch(version)
+    print(json.dumps(d.to_json()))

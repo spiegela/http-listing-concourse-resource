@@ -1,0 +1,5 @@
+beautifulsoup4
+html5lib
+requests
+semantic_version
+httmock
