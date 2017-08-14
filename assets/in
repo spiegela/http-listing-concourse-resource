@@ -1,0 +1,86 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+import sys
+import fileinput
+import os
+import json
+import requests
+import hashlib
+from shutil import unpack_archive
+
+from version_directory import VersionDirectory
+
+def read_input():
+    payload = json.load(sys.stdin)
+    version = None
+    params = {}
+    if 'source' not in payload or 'url' not in payload['source']:
+        sys.stdout.write('must specify a source URL')
+        exit(1)
+    if 'version' in payload and 'version' in payload['version']:
+        version = payload['version']['version']
+    if 'params' in payload:
+        params = payload['params']
+    return (payload['source'], version, params)
+
+def print_to_file(fname, content):
+    with open(fname, 'w') as fh:
+        print(content, file=fh)
+
+if __name__ == '__main__':
+    destination = sys.argv[1]
+    (source, version, params) = read_input()
+    d = VersionDirectory(source, version)
+
+    fetch_tarball = False
+    if 'tarball' in params:
+        fetch_tarball = params['tarball']
+
+    bin_hash = d.fetch_hash()
+
+    # Write the binary hash to destination
+    hash_file = os.path.join(destination, d.hash_algorithm)
+    print_to_file(hash_file, bin_hash)
+
+    # Write version to destination
+    version_file = os.path.join(destination, "version")
+    print_to_file(version_file, version)
+
+    # Write binary URL to destination
+    url_file = os.path.join(destination, "url")
+    print_to_file(url_file, d.bin_url())
+
+    digest = hashlib.new(d.hash_algorithm)
+
+    # Fetch the binary write it to destination
+    bin_file = os.path.join(destination, d.bin_file)
+    req = requests.get(d.bin_url(), stream=True)
+    bin_fh = open(bin_file, 'wb')
+    for chunk in req.iter_content(chunk_size=512):
+        if chunk:
+            bin_fh.write(chunk)
+            digest.update(chunk)
+    bin_fh.close()
+
+    # Download the source tarball
+    if fetch_tarball:
+        source_file = os.path.join(destination, d.source_file)
+        req = requests.get(d.source_url(), stream=True)
+        source_fh = open(source_file, 'wb')
+        for chunk in req.iter_content(chunk_size=512):
+            if chunk:
+                source_fh.write(chunk)
+        source_fh.close()
+
+    if digest.hexdigest() != bin_hash:
+        print('Server-side digest does not equal file hexdigest')
+        exit(1)
+
+    try:
+        unpack_archive(bin_file, destination)
+        os.remove(bin_file)
+    except ValueError:
+        print('Cannot unpack', bin_file, ' -- It is not a supported archive format',
+                file=sys.stderr)
+

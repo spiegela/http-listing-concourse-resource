@@ -232,9 +232,9 @@ def parse(soup):
                 listing.append(FileEntry(file_name, None, None, None))
     return cwd, listing
 
-def fetch_listing(url):
+def fetch_listing(url, params):
     import requests
-    req = requests.get(url, timeout=30)
+    req = requests.get(url, params=params, timeout=30)
     req.raise_for_status()
     soup = bs4.BeautifulSoup(req.content, 'html5lib')
     return parse(soup)

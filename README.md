@@ -18,6 +18,8 @@ resources:
   source:
     url: http://www-us.apache.org/dist/hadoop/core
     prefix: hadoop-
+    hash-format: mds
+    hash-algorithm: sha1
     binary-suffix: .tar.gz
     source-suffix: -src.tar.gz
     mds-suffix: .tar.gz.mds
@@ -80,8 +82,9 @@ For example, to automatically consume releases of
 * `version-suffix`: A suffix applied to version directory contents
 * `binary-suffix`: A suffix applied to binary directory contents
 * `source-suffix`: A suffix applied to source directory contents
-* `hash-type`: Type of file used to check contents validity. Valid options are mds, sha,
-and sha1sum.
+* `hash-format`: Type of file format containing binary file digest hash. Valid options are mds, md5,
+and sha1.
+* `hash-algorithm`: Hashing algorithm used to check binary file validity. Valid options are sha1, sha384, sha256, sha512, md5
 * `hash-prefix`: A prefix applied to hash verification file
 * `hash-suffix`: A suffix applied to hash verification file
 
@@ -93,19 +96,16 @@ Detects new versions of the release that have been published to the URL, accordi
 semantic versioning. If no version is specified, `check` returns all versions in order;
 otherwise, `check` returns all versions from the version specified on.
 
-Note that there may be a delay between the final release appearing on
-GitHub, and it appearing in bosh.io.
-
-
 ### `in`: Fetch a version of the release.
 
 Fetches a given release, placing the following in the destination:
 
+*  The binary or archive contents of the binary content, if it is a valid archive.
 * `version`: The version number of the release.
 * `url`: A URL that can be used to download directory contents
-* `sha1`: The sha1 of the binary tarball.
-* `source.tgz`: The source tarball, if the `tarball` param is `true`.
+* A hash digest file. The actual file name will match the hashing algorithm used.
+* The source tarball, if the `tarball` param is `true`. Actual file name will match the downloaded file.
 
 #### Parameters
 
-* `tarball`: *Optional.* Default `true`. Fetch the release tarball.
+* `tarball`: *Optional.* Default `false`. Fetch the release tarball.

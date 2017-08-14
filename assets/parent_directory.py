@@ -12,18 +12,6 @@ from directory import Directory
 class ParentDirectory(Directory):
     def __init__(self, source):
         super(ParentDirectory, self).__init__(source)
-        if 'version-prefix' in source:
-            self.version_prefix = source['version-prefix']
-        elif 'prefix' in source:
-            self.version_prefix = source['prefix']
-        else:
-            self.version_prefix = None
-        if 'version-suffix' in source:
-            self.version_suffix = source['version-suffix']
-        elif 'suffix' in source:
-            self.version_suffix = source['prefix']
-        else:
-            self.version_suffix = None
         self.versions = set()
 
     def __parse_entry(self, entry):
@@ -35,7 +23,7 @@ class ParentDirectory(Directory):
         return Version(entry, partial=True)
 
     def fetch(self, version=None):
-        _cwd, listing = htmllistparse.fetch_listing(self.url)
+        _cwd, listing = htmllistparse.fetch_listing(self.url, params=self.url_params)
         for e in listing:
             try:
                 semver = self.__parse_entry(e.name)
