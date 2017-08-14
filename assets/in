@@ -84,3 +84,7 @@ if __name__ == '__main__':
         print('Cannot unpack', bin_file, ' -- It is not a supported archive format',
                 file=sys.stderr)
 
+    print(json.dumps({
+        'version': {'version': version},
+        'metadata': []
+    }))
